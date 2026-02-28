@@ -38,13 +38,13 @@ it arrived via a keypress, the `:` prompt, or the FIFO pipe. This means:
 
 ### App States
 
-| State | Description |
-|---|---|
-| `Unconfigured` | No program loaded; shows hint text, no timer displayed |
-| `Ready` | Program loaded but not yet started; timer shows starting value |
-| `Running` | Timer is ticking |
-| `Paused` | Timer is frozen |
-| `Done` | Program completed; displays a completion message |
+| State          | Description                                                    |
+| -------------- | -------------------------------------------------------------- |
+| `Unconfigured` | No program loaded; shows hint text, no timer displayed         |
+| `Ready`        | Program loaded but not yet started; timer shows starting value |
+| `Running`      | Timer is ticking                                               |
+| `Paused`       | Timer is frozen                                                |
+| `Done`         | Program completed; displays a completion message               |
 
 ---
 
@@ -54,10 +54,12 @@ it arrived via a keypress, the `:` prompt, or the FIFO pipe. This means:
 text, and exits cleanly.
 
 **Verify:**
+
 - `go run ./cmd/timer` launches without error
 - `q` and `Ctrl+C` both quit
 
 **Notes:**
+
 - `go mod init`, establish directory layout above
 - Wire up `tea.Program` with a minimal Model/Update/View
 - Add `lipgloss` and `bubbletea` as dependencies
@@ -72,11 +74,13 @@ text, and exits cleanly.
 character font, centered in the terminal.
 
 **Verify:**
+
 - Block digits render correctly for all characters (0–9, `:`)
 - Display is horizontally and vertically centered
 - Resize the terminal — centering adjusts
 
 **Notes:**
+
 - Encode the font from `specs/character-font-reference.txt` as a map of `rune`
   → `[5]string` (5 rows, each padded to exactly 6 chars; colon has empty 5th row)
 - Renderer takes a string like `"1:23"` and returns a `[]string` of composed rows
@@ -85,16 +89,18 @@ character font, centered in the terminal.
 
 ---
 
-## Milestone 3 — Live Countdown
+## Milestone 3 — Live Countdown ✓
 
 **Delivers:** A hardcoded 10-second countdown that ticks down and stops at
 `0:00`.
 
 **Verify:**
+
 - Timer counts down in real time
 - Stops cleanly at `0:00` (no wrap-around)
 
 **Notes:**
+
 - Introduce `internal/timer` package with a pure `Timer` struct: duration,
   remaining, running bool
 - Bubbletea tick: emit a `tickMsg` every 100ms via `tea.Tick`; `Update` advances
@@ -105,12 +111,195 @@ character font, centered in the terminal.
 
 ---
 
+## Milestone 3.5 — Full Data Model
+
+**Delivers:** All core structs and enums defined across packages. No new
+user-visible behavior — this is a foundation milestone that prevents
+architecture surprises in later milestones.
+
+**Verify:**
+
+- `go build ./...` passes with all new types in place
+- All existing tests still pass
+
+### `internal/types`
+
+Shared primitives imported by any package that needs them, breaking the
+`model` ↔ `config` import cycle:
+
+```go
+type Mode int
+
+const (
+    ModeAuto Mode = iota
+    ModeManual
+)
+```
+
+### `internal/timer`
+
+`Timer` is fully self-contained — it owns interval/round progression and
+its own state machine. The existing `TimerState` enum is replaced by a
+richer state that lives inside `Timer`. `timeLeft` is allowed to go
+negative in manual mode; `overflow` is derived as `max(0, -timeLeft)` and
+is not stored.
+
+```go
+type TimerState int
+
+const (
+    TimerReady    TimerState = iota
+    TimerRunning
+    TimerPaused
+    TimerDone
+)
+
+type Timer struct {
+    intervals       []time.Duration
+    rounds          int           // 0 = loop forever
+    mode            types.Mode
+    currentInterval int
+    currentRound    int
+    timeLeft        time.Duration // can be negative in manual mode
+    state           TimerState
+}
+```
+
+Key behaviors:
+- `Tick(elapsed)` advances `timeLeft`; in auto mode, hitting zero advances
+  to the next interval (or transitions to `TimerDone`); in manual mode,
+  `timeLeft` continues past zero into negative territory
+- `Next()` manually advances to the next interval (used in manual mode and
+  by the `next` command)
+- `Back()` returns to the previous interval
+- `Overflow() time.Duration` returns `max(0, -timeLeft)` — derived, not stored
+
+### `internal/stopwatch`
+
+```go
+type StopwatchState int
+
+const (
+    StopwatchReady   StopwatchState = iota
+    StopwatchRunning
+    StopwatchPaused
+)
+
+type Stopwatch struct {
+    elapsed  time.Duration
+    laps     []time.Duration
+    state    StopwatchState
+}
+```
+
+Key behaviors:
+- `Tick(elapsed)` advances `elapsed` when running
+- `Lap()` appends current `elapsed` to `laps` and resets `elapsed` to zero
+- `Laps()` returns the lap slice
+
+### `internal/program`
+
+`Program` is a Go interface implemented by both `Timer` and `Stopwatch`.
+It is the only thing `Model` interacts with — `Model` never reaches inside.
+
+```go
+type ProgramState int
+
+const (
+    ProgramReady   ProgramState = iota
+    ProgramRunning
+    ProgramPaused
+    ProgramDone    // not applicable to Stopwatch
+)
+
+type Program interface {
+    Tick(elapsed time.Duration)
+    Start()
+    Pause()
+    State() ProgramState
+    // TimeDisplay returns the duration to render (always non-negative)
+    TimeDisplay() time.Duration
+    // IsOverflow reports whether we are past zero in manual mode
+    IsOverflow() bool
+}
+```
+
+`*Timer` and `*Stopwatch` both implement `Program`.
+
+### `internal/model`
+
+`AppState` is **not stored** — it is derived from `program`:
+
+```go
+func (m Model) AppState() AppState {
+    if m.program == nil {
+        return Unconfigured
+    }
+    switch m.program.State() {
+    case program.ProgramReady:   return Ready
+    case program.ProgramRunning: return Running
+    case program.ProgramPaused:  return Paused
+    case program.ProgramDone:    return Done
+    }
+}
+```
+
+`Toast` and `Prompt` are extracted as sub-structs:
+
+```go
+type Toast struct {
+    Message string
+    Expiry  time.Time
+}
+
+type Prompt struct {
+    Input textinput.Model
+    Error string
+    Open  bool
+}
+
+type Model struct {
+    width, height int
+    program       program.Program  // nil when Unconfigured
+    lastTick      time.Time
+    toast         Toast
+    prompt        Prompt
+    showHelp      bool            // (M19)
+    config        config.Config   // (M18)
+}
+```
+
+### `internal/config`
+
+```go
+type Config struct {
+    DefaultMode    types.Mode
+    LowTimeWarning int               // seconds, default 30
+    TimeIncrement  int               // seconds, default 30
+    Beep           bool              // default true
+    Keybindings    map[string]string // key → command string
+    FIFOPath       string            // default /tmp/workout-timer.fifo
+    LockPath       string            // default /tmp/workout-timer.lock
+}
+
+func Default() Config // returns a Config with all defaults populated
+```
+
+**Notes:**
+
+- `promptInput textinput.Model` requires `github.com/charmbracelet/bubbles/textinput` — add the dependency in this milestone.
+- Fields for future milestones can be stubbed with zero values; they don't
+  need to be wired up yet.
+
+---
+
 ## Milestone 4 — Command Prompt
 
 **Delivers:** `:` opens an inline command prompt. `set <seconds>` or
 `set <m:ss>` configures the timer, transitioning to `Ready` state.
 
 **Verify:**
+
 - Launch shows `Unconfigured` screen with hint: `Press : to configure or ? for help`
 - `:` opens a prompt at the bottom of the screen
 - `set 90` loads a 90-second timer and displays `1:30` in big digits (`Ready` state)
@@ -119,6 +308,7 @@ character font, centered in the terminal.
 - Invalid input shows an inline error message; prompt stays open
 
 **Notes:**
+
 - Use the `bubbles/textinput` component
 - Introduce `internal/parser` package; begin with `ParseSet` supporting a single
   duration only
@@ -135,11 +325,13 @@ character font, centered in the terminal.
 **Delivers:** `Enter` starts a loaded timer. `Space`/`p` toggles pause.
 
 **Verify:**
+
 - `set 90` → `Enter` starts the countdown
 - `Space` and `p` pause and unpause
 - Paused state is visually indicated (dim timer or "PAUSED" label)
 
 **Notes:**
+
 - `Enter` transitions `Ready → Running`; tick only fires when `Running`
 - `Space`/`p` toggle between `Running` and `Paused`
 - Both keys dispatch commands (`next` / `pause`) through the command dispatch
@@ -153,10 +345,12 @@ character font, centered in the terminal.
 threshold (default: 30s).
 
 **Verify:**
+
 - Timer is white above 30s, turns yellow at 29s and below
 - Works correctly after a pause/unpause
 
 **Notes:**
+
 - `lipgloss` color applied in renderer based on remaining seconds
 - Hardcode threshold for now; will be config-driven in M18
 
@@ -168,6 +362,7 @@ threshold (default: 30s).
 auto/manual mode flag. Interval counter (`3/10`) is displayed.
 
 **Verify:**
+
 - `set auto 90` — single interval, auto mode
 - `set manual 60 x5` — 5 rounds, manual mode
 - `set auto 1:30,60,4:00 x3` — multi-interval program
@@ -175,6 +370,7 @@ auto/manual mode flag. Interval counter (`3/10`) is displayed.
 - Round counter (e.g. `Round 1/3`) appears if rounds > 1
 
 **Notes:**
+
 - Extend `internal/parser` to handle the full grammar; extend unit tests to
   cover multi-interval and round syntax
 - Model gains `Program` struct: slice of durations, round count, mode, current
@@ -189,12 +385,14 @@ auto/manual mode flag. Interval counter (`3/10`) is displayed.
 reaches zero. After the last interval of the last round, the program ends.
 
 **Verify:**
+
 - Multi-interval program cycles through automatically
 - Interval and round counters update correctly
 - End of program transitions to `Done` state and displays an enthusiastic
   completion message (e.g., "Done!", "Finished!", "Great work!") below the timer
 
 **Notes:**
+
 - `timer.Timer` reaching zero triggers an `intervalDoneMsg` in `Update`
 - Advance logic: increment interval index; if past end, increment round; if
   past last round, transition to `Done`
@@ -209,11 +407,13 @@ reaches zero. After the last interval of the last round, the program ends.
 cyan. `Enter` advances to the next interval.
 
 **Verify:**
+
 - At zero: audible beep, timer flips to cyan and counts upward
 - `Enter` advances to next interval at any point (before or after zero)
 - Count-up is visually distinct from normal countdown
 
 **Notes:**
+
 - Audio: start with `exec.Command("afplay", ...)` on macOS, `aplay` on Linux,
   as a pluggable call in `internal/audio` — abstract the interface so it can be
   swapped later
@@ -231,11 +431,13 @@ cyan. `Enter` advances to the next interval.
 subtracts 30s (floors at 0:00).
 
 **Verify:**
+
 - `b` from interval 3/5 goes to interval 2/5, resets that interval's time
 - `+` and `-` adjust the running timer visibly
 - `-` does not go below 0:00
 
 **Notes:**
+
 - Back navigates the `Program` struct: decrement interval; wrap to previous
   round if needed
 - `add`/`subtract` are dispatched as commands (keybindings call `add 30` and
@@ -249,11 +451,13 @@ subtracts 30s (floors at 0:00).
 brief auto-dismissing messages.
 
 **Verify:**
+
 - `b` at the first interval of the first round shows "Already at the first interval"
 - Notification disappears automatically after ~2 seconds
 - A new notification immediately replaces any existing one
 
 **Notes:**
+
 - Store `toastMsg string` and `toastExpiry time.Time` in the model
 - On each tick, clear toast if `time.Now().After(toastExpiry)`
 - Rendered as a single dim line at the bottom; lowest display priority —
@@ -268,6 +472,7 @@ brief auto-dismissing messages.
 `back`, `add <N>`, `subtract <N>`, `reset`, `clear`, `status`, `quit`/`q`.
 
 **Verify:**
+
 - Each command from the spec table works as described
 - `status` prints current config + mode + progress (temporary bottom line or
   overlay)
@@ -275,6 +480,7 @@ brief auto-dismissing messages.
 - `reset` restarts the current program from the beginning
 
 **Notes:**
+
 - Extend `internal/parser` with `ParseCommand` covering all commands; add unit
   tests
 - Parser is now complete and shared by the FIFO listener in M16
@@ -287,12 +493,14 @@ brief auto-dismissing messages.
 a lap. Lap history displays below the timer if space permits.
 
 **Verify:**
+
 - `stopwatch` from `Unconfigured` starts counting up from 0:00
 - `Enter` records a lap split; lap count increments
 - With enough terminal height, lap history (split times) shows below
 - With limited height, only current lap time + count is shown
 
 **Notes:**
+
 - `timer.Timer` gains `ModeStopwatch`; tick increments instead of decrements
 - Lap list stored in model; renderer conditionally includes it based on height
 
@@ -304,12 +512,14 @@ a lap. Lap history displays below the timer if space permits.
 same grammar as the `set` command.
 
 **Verify:**
+
 - `go run ./cmd/timer 90` launches in `Ready` state with a 90s timer
 - `go run ./cmd/timer auto 1:30,60 x3` launches with a full program
 - `go run ./cmd/timer stopwatch` launches directly into stopwatch mode
 - `go run ./cmd/timer` (no args) launches `Unconfigured`
 
 **Notes:**
+
 - `cmd/timer/main.go` calls `parser.ParseSet(os.Args[1:])` and passes the
   result to the initial model
 - Reuses the existing parser; no new grammar to define
@@ -322,6 +532,7 @@ same grammar as the `set` command.
 the priority order from the spec.
 
 **Verify:**
+
 - Very tall terminal: time + interval counter + round counter + labels all visible
 - Medium terminal: time + interval counter + round counter
 - Small terminal: time + interval counter only
@@ -329,6 +540,7 @@ the priority order from the spec.
 - Resize in real time — display updates immediately
 
 **Notes:**
+
 - All layout decisions are made in `View` based on stored `width` and `height`
 - Each display element has a minimum height cost; conditionally include
   bottom-up based on remaining space
@@ -343,11 +555,13 @@ the priority order from the spec.
 command valid in the prompt is valid over the pipe.
 
 **Verify:**
+
 - From a second terminal: `echo 'pause' > /tmp/workout-timer.fifo` toggles pause
 - `echo 'next' > /tmp/workout-timer.fifo` advances the interval
 - `echo 'set auto 60 x5' > /tmp/workout-timer.fifo` reconfigures a running timer
 
 **Notes:**
+
 - `internal/fifo` runs a goroutine that opens the FIFO for reading in a loop
   and sends each line as a `fifoCommandMsg` into the Bubbletea program via
   `program.Send()`
@@ -361,11 +575,13 @@ command valid in the prompt is valid over the pipe.
 clear error message.
 
 **Verify:**
+
 - Launch the timer; open a second terminal and run `timer` again — it exits with
   an error
 - Kill the first instance; the second launch now succeeds
 
 **Notes:**
+
 - Acquire an exclusive file lock on `/tmp/workout-timer.lock` at startup using
   `syscall.Flock` (or `golang.org/x/sys/unix`)
 - Release lock on clean exit; also release on `SIGTERM`/`SIGINT`
@@ -379,6 +595,7 @@ clear error message.
 applied to defaults.
 
 **Verify:**
+
 - Set `low_time_warning = 10` in config — yellow triggers at 10s
 - Set `time_increment = 60` — `+` key adds 60s
 - Set `default_mode = "manual"` — bare `set <time>` uses manual mode
@@ -386,6 +603,7 @@ applied to defaults.
   unsets it
 
 **Notes:**
+
 - Use `github.com/BurntSushi/toml` for parsing
 - `internal/config` defines a `Config` struct with all fields and their defaults
 - Keybindings are a `[keybindings]` TOML table: e.g. `"b" = "back"`,
@@ -403,6 +621,7 @@ commands. A live status line shows the current timer state while the overlay
 is open.
 
 **Verify:**
+
 - `?` shows a readable help screen
 - A status line at the top of the overlay shows current timer state in plain
   text (e.g., `▶ 1:23 remaining — Interval 2/3`) and updates live
@@ -410,6 +629,7 @@ is open.
 - Any keypress dismisses it
 
 **Notes:**
+
 - Help content is generated from the same keybinding map used by `Update`, so
   it always stays in sync with overrides
 - Status line reuses model's existing timer state; rendered as one extra line
@@ -424,6 +644,7 @@ is open.
 considered complete.
 
 **Items:**
+
 - Confirm `b` behavior at first interval/first round (toast added in M11,
   but verify the exact message and no-op behavior is correct)
 - `status` command output formatting
