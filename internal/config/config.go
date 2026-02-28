@@ -28,6 +28,7 @@ func Default() Config {
 			"l":     "next",
 			"?":     "help",
 			":":     "prompt",
+			"q":     "quit",
 		},
 		FIFOPath: "/tmp/workout-timer.fifo",
 		LockPath: "/tmp/workout-timer.lock",
