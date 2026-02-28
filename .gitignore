@@ -1,6 +1,6 @@
 # Binaries
 workout-timer
-timer
+/timer
 *.exe
 
 # Go build cache
