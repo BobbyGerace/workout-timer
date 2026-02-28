@@ -1,12 +1,15 @@
 package model
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/BobbyGerace/workout-timer/internal/renderer"
 )
 
-var titleStyle = lipgloss.NewStyle().
-	Bold(true).
+var timerStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("15"))
 
 type Model struct {
@@ -39,6 +42,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	content := titleStyle.Render("Workout Timer")
+	rows := renderer.BigDigits("71:23")
+	content := timerStyle.Render(strings.Join(rows, "\n"))
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
 }

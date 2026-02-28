@@ -48,7 +48,7 @@ it arrived via a keypress, the `:` prompt, or the FIFO pipe. This means:
 
 ---
 
-## Milestone 1 — Scaffold
+## Milestone 1 — Scaffold ✓
 
 **Delivers:** A Bubbletea app that launches, shows "Workout Timer" placeholder
 text, and exits cleanly.
@@ -66,7 +66,7 @@ text, and exits cleanly.
 
 ---
 
-## Milestone 2 — Big Digit Renderer
+## Milestone 2 — Big Digit Renderer ✓
 
 **Delivers:** The app displays a hardcoded time (`1:23`) in the custom block
 character font, centered in the terminal.
