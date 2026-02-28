@@ -1,0 +1,15 @@
+# Binaries
+workout-timer
+timer
+*.exe
+
+# Go build cache
+/vendor/
+
+# Test output
+*.test
+*.out
+coverage.html
+
+# macOS
+.DS_Store
