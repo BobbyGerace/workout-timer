@@ -55,10 +55,7 @@ func TestManualModeOverflow(t *testing.T) {
 	if !timer.IsOverflow() {
 		t.Error("expected overflow")
 	}
-	if timer.Overflow() != 2*time.Second {
-		t.Errorf("expected 2s overflow, got %v", timer.Overflow())
-	}
-	// TimeDisplay always non-negative
+	// TimeDisplay returns overflow amount (always non-negative)
 	if timer.TimeDisplay() != 2*time.Second {
 		t.Errorf("expected TimeDisplay 2s, got %v", timer.TimeDisplay())
 	}

@@ -21,4 +21,6 @@ type Program interface {
 	TimeDisplay() time.Duration
 	// IsOverflow reports whether we are past zero in manual mode
 	IsOverflow() bool
+	// IsLowTime determines if the timer (only in countdown mode) is less than the threshhold
+	IsLowTime(threshold time.Duration) bool
 }

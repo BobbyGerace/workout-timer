@@ -92,15 +92,6 @@ func (t *Timer) Next() {
 // if already at the first interval. Implemented in M10.
 func (t *Timer) Back() {}
 
-// Overflow returns how far past zero the timer has gone (manual mode only).
-// This is derived from timeLeft and never stored separately.
-func (t *Timer) Overflow() time.Duration {
-	if t.timeLeft >= 0 {
-		return 0
-	}
-	return -t.timeLeft
-}
-
 // TimeDisplay returns the duration to render — always non-negative.
 func (t *Timer) TimeDisplay() time.Duration {
 	if t.timeLeft < 0 {
@@ -111,6 +102,10 @@ func (t *Timer) TimeDisplay() time.Duration {
 
 func (t *Timer) IsOverflow() bool {
 	return t.timeLeft < 0
+}
+
+func (t *Timer) IsLowTime(threshold time.Duration) bool {
+	return t.timeLeft > 0 && t.timeLeft < threshold
 }
 
 func (t *Timer) State() program.ProgramState {

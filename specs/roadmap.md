@@ -322,7 +322,7 @@ func Default() Config // returns a Config with all defaults populated
 
 ---
 
-## Milestone 5 — Start / Pause
+## Milestone 5 — Start / Pause ✓
 
 **Delivers:** `Enter` starts a loaded timer. `Space`/`p` toggles pause.
 
@@ -341,7 +341,7 @@ func Default() Config // returns a Config with all defaults populated
 
 ---
 
-## Milestone 6 — Low-Time Color Warning
+## Milestone 6 — Low-Time Color Warning ✓
 
 **Delivers:** Timer text turns yellow when remaining time is below the warning
 threshold (default: 30s).

@@ -66,6 +66,10 @@ func (s *Stopwatch) IsOverflow() bool {
 	return false
 }
 
+func (s *Stopwatch) IsLowTime(threshold time.Duration) bool {
+	return false
+}
+
 func (s *Stopwatch) State() program.ProgramState {
 	switch s.state {
 	case StopwatchRunning:

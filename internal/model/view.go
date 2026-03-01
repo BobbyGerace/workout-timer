@@ -20,6 +20,12 @@ var hintStyle = lipgloss.NewStyle().
 var errorStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("9"))
 
+var lowTimeStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("3"))
+
+var overflowStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("6"))
+
 var pausedStyle = lipgloss.NewStyle().
 	Faint(true)
 
@@ -38,9 +44,7 @@ func (m Model) View() string {
 		hint := hintStyle.Render("Press : to configure or ? for help")
 		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Center, hint)
 	default:
-		timeStr := formatTime(m.prog.TimeDisplay())
-		rows := renderer.BigDigits(timeStr)
-		content := timerStyle.Render(strings.Join(rows, "\n"))
+		content := m.renderTime()
 		if m.AppState() == Paused {
 			content += "\n\n" + pausedStyle.Render("PAUSED")
 		}
@@ -51,6 +55,21 @@ func (m Model) View() string {
 		return mainContent
 	}
 	return mainContent + "\n" + strings.Join(promptLines, "\n")
+}
+
+func (m Model) renderTime() string {
+	timeStr := formatTime(m.prog.TimeDisplay())
+	rows := renderer.BigDigits(timeStr)
+
+	style := timerStyle
+	timeIsLow := m.prog.IsLowTime(time.Duration(m.config.LowTimeWarning) * time.Second)
+	if timeIsLow {
+		style = lowTimeStyle
+	} else if m.prog.IsOverflow() {
+		style = overflowStyle
+	}
+
+	return style.Render(strings.Join(rows, "\n"))
 }
 
 func (m Model) renderPrompt() []string {
