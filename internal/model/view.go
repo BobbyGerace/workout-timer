@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -10,6 +9,8 @@ import (
 
 	"github.com/BobbyGerace/workout-timer/internal/renderer"
 )
+
+var labelStyle = lipgloss.NewStyle().Faint(true)
 
 var timerStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("15"))
@@ -41,7 +42,7 @@ func (m Model) View() string {
 		hint := hintStyle.Render("Press : to configure or ? for help")
 		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Center, hint)
 	default:
-		content := m.renderTime()
+		content := m.renderTime(mainHeight)
 		if m.AppState() == Paused {
 			content += "\n\n" + pausedStyle.Render("PAUSED")
 		}
@@ -54,7 +55,10 @@ func (m Model) View() string {
 	return mainContent + "\n" + strings.Join(promptLines, "\n")
 }
 
-func (m Model) renderTime() string {
+// bigDigitHeight is the fixed row count of the big-digit font.
+const bigDigitHeight = 5
+
+func (m Model) renderTime(availableHeight int) string {
 	timeStr := formatTime(m.prog.TimeDisplay())
 	rows := renderer.BigDigits(timeStr)
 
@@ -66,7 +70,23 @@ func (m Model) renderTime() string {
 		style = overflowStyle
 	}
 
-	return style.Render(strings.Join(rows, "\n"))
+	result := style.Render(strings.Join(rows, "\n")) + "\n"
+
+	// Budget remaining lines for labels (each costs 1 row + 1 blank separator).
+	budgetLeft := availableHeight - bigDigitHeight - 2 // -2 for the leading and trailing  "\n" in Place
+
+	intervalCur, intervalTotal := m.prog.IntervalProgress()
+	if intervalTotal > 0 && budgetLeft >= 2 {
+		result += "\n" + labelStyle.Render(fmt.Sprintf("Interval %d/%d", intervalCur, intervalTotal))
+		budgetLeft -= 2
+	}
+
+	roundCur, roundTotal := m.prog.RoundProgress()
+	if roundTotal > 0 && budgetLeft >= 2 {
+		result += "\n" + labelStyle.Render(fmt.Sprintf("Round %d/%d", roundCur, roundTotal))
+	}
+
+	return result
 }
 
 func (m Model) renderPrompt() []string {
@@ -81,12 +101,8 @@ func (m Model) renderPrompt() []string {
 }
 
 // formatTime formats a duration as M:SS.
-// Uses ceiling so that a countdown displays "10" for the full second before
-// dropping to "9". This is correct for countdown display.
-// TODO: absorb the ceil / floor stuff into Program.TimeDisplay so that
-// we can correctly handle the count-up scenario.
 func formatTime(d time.Duration) string {
-	total := int(math.Ceil(d.Seconds()))
+	total := int(d.Seconds())
 	minutes := total / 60
 	seconds := total % 60
 	return fmt.Sprintf("%d:%02d", minutes, seconds)

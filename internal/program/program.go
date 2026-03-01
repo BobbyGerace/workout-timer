@@ -23,4 +23,10 @@ type Program interface {
 	IsOverflow() bool
 	// IsLowTime determines if the timer (only in countdown mode) is less than the threshhold
 	IsLowTime(threshold time.Duration) bool
+	// IntervalProgress returns (current, total) interval for display.
+	// Returns (0, 0) if not applicable (e.g. single interval or stopwatch).
+	IntervalProgress() (current, total int)
+	// RoundProgress returns (current, total) round for display.
+	// Returns (0, 0) if looping forever or not applicable.
+	RoundProgress() (current, total int)
 }

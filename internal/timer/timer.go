@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"math"
 	"time"
 
 	"github.com/BobbyGerace/workout-timer/internal/program"
@@ -95,9 +96,9 @@ func (t *Timer) Back() {}
 // TimeDisplay returns the duration to render — always non-negative.
 func (t *Timer) TimeDisplay() time.Duration {
 	if t.timeLeft < 0 {
-		return -t.timeLeft
+		return time.Duration(math.Floor(-t.timeLeft.Seconds())) * time.Second
 	}
-	return t.timeLeft
+	return time.Duration(math.Ceil(t.timeLeft.Seconds())) * time.Second
 }
 
 func (t *Timer) IsOverflow() bool {
@@ -125,3 +126,17 @@ func (t *Timer) CurrentInterval() int { return t.currentInterval }
 func (t *Timer) CurrentRound() int    { return t.currentRound }
 func (t *Timer) TotalIntervals() int  { return len(t.intervals) }
 func (t *Timer) TotalRounds() int     { return t.rounds }
+
+func (t *Timer) IntervalProgress() (current, total int) {
+	if len(t.intervals) <= 1 {
+		return 0, 0
+	}
+	return t.currentInterval + 1, len(t.intervals)
+}
+
+func (t *Timer) RoundProgress() (current, total int) {
+	if t.rounds <= 1 {
+		return 0, 0
+	}
+	return t.currentRound + 1, t.rounds
+}

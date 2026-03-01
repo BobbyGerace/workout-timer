@@ -1,6 +1,7 @@
 package stopwatch
 
 import (
+	"math"
 	"time"
 
 	"github.com/BobbyGerace/workout-timer/internal/program"
@@ -59,7 +60,7 @@ func (s *Stopwatch) Laps() []time.Duration {
 }
 
 func (s *Stopwatch) TimeDisplay() time.Duration {
-	return s.elapsed
+	return time.Duration(math.Floor(s.elapsed.Seconds())) * time.Second
 }
 
 func (s *Stopwatch) IsOverflow() bool {
@@ -69,6 +70,9 @@ func (s *Stopwatch) IsOverflow() bool {
 func (s *Stopwatch) IsLowTime(threshold time.Duration) bool {
 	return false
 }
+
+func (s *Stopwatch) IntervalProgress() (current, total int) { return 0, 0 }
+func (s *Stopwatch) RoundProgress() (current, total int)    { return 0, 0 }
 
 func (s *Stopwatch) State() program.ProgramState {
 	switch s.state {

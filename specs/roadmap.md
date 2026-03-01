@@ -358,7 +358,7 @@ threshold (default: 30s).
 
 ---
 
-## Milestone 7 — Full `set` Grammar + Intervals
+## Milestone 7 — Full `set` Grammar + Intervals ✓
 
 **Delivers:** Full `set` command syntax — multiple intervals, round counts,
 auto/manual mode flag. Interval counter (`3/10`) is displayed.

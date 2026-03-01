@@ -47,7 +47,7 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 		return m, cmd, nil
 
 	case "set":
-		p, err := parser.ParseSet(command)
+		p, err := parser.ParseSet(command, m.config.DefaultMode)
 		if err != nil {
 			return m, nil, err
 		}
