@@ -33,10 +33,7 @@ func (m Model) View() string {
 	promptLines := m.renderPrompt()
 	promptHeight := len(promptLines)
 
-	mainHeight := m.height - promptHeight
-	if mainHeight < 0 {
-		mainHeight = 0
-	}
+	mainHeight := max(m.height-promptHeight, 0)
 
 	var mainContent string
 	switch m.AppState() {

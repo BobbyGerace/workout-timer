@@ -78,7 +78,7 @@ func (t *Timer) Next() {
 	if t.currentInterval == 0 {
 
 		// If this was the final round, reset the rounds and transition to done
-		if t.rounds > 0 && t.currentRound == t.rounds - 1  {
+		if t.rounds > 0 && t.currentRound == t.rounds-1 {
 			t.state = TimerDone
 			t.currentRound = 0
 		} else {
