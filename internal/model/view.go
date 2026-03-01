@@ -83,9 +83,8 @@ func (m Model) renderPrompt() []string {
 // formatTime formats a duration as M:SS.
 // Uses ceiling so that a countdown displays "10" for the full second before
 // dropping to "9". This is correct for countdown display.
-// TODO: count-up display (stopwatch mode and manual-mode overflow) should use
-// floor instead — "0" until a full second has elapsed, then "1", etc.
-// formatTime will need a parameter or a sibling function when those are wired up.
+// TODO: absorb the ceil / floor stuff into Program.TimeDisplay so that
+// we can correctly handle the count-up scenario.
 func formatTime(d time.Duration) string {
 	total := int(math.Ceil(d.Seconds()))
 	minutes := total / 60

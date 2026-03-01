@@ -22,7 +22,8 @@ func BigDigits(s string) []string {
 
 	prev := rune(0)
 	for _, ch := range s {
-		glyph, ok := glyphs[ch]
+		// TODO: make font type a config setting
+		glyph, ok := pixel[ch]
 		if !ok {
 			continue
 		}

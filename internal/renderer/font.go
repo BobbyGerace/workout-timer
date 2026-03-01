@@ -1,8 +1,9 @@
 package renderer
 
-// glyphs maps each supported character to its 5-row block representation.
+// pixel maps each supported character to its 5-row block representation.
 // Every row is exactly 6 characters wide (right-padded with spaces).
-var glyphs = map[rune][5]string{
+// Uses Unicode half-block characters (▄ ▀ ▌ ▐) for a bevelled look.
+var pixel = map[rune][5]string{
 	'0': {
 		"▄████▄",
 		"██  ██",
@@ -72,6 +73,90 @@ var glyphs = map[rune][5]string{
 		"▀█████",
 		"    ██",
 		"▀████▀",
+	},
+	':': {
+		"      ",
+		"  ██  ",
+		"      ",
+		"  ██  ",
+		"      ",
+	},
+}
+
+// powerline maps each supported character to its 5-row block representation.
+// Every row is exactly 6 characters wide (right-padded with spaces).
+// Uses full-block (█) characters with Powerline rounded-corner glyphs
+// (U+E0BA, U+E0B8, U+E0BE, U+E0BC) — requires a Nerd Font / Powerline-patched font.
+var powerline = map[rune][5]string{
+	'0': {
+		"\uE0BA████\uE0B8",
+		"██  ██",
+		"██  ██",
+		"██  ██",
+		"\uE0BE████\uE0BC",
+	},
+	'1': {
+		"\uE0BA███  ",
+		"  ██  ",
+		"  ██  ",
+		"  ██  ",
+		"██████",
+	},
+	'2': {
+		"\uE0BA████\uE0B8",
+		"    ██",
+		"\uE0BA████\uE0BC",
+		"██    ",
+		"██████",
+	},
+	'3': {
+		"\uE0BA████\uE0B8",
+		"    ██",
+		" █████",
+		"    ██",
+		"\uE0BE████\uE0BC",
+	},
+	'4': {
+		"██  ██",
+		"██  ██",
+		"██████",
+		"    ██",
+		"    ██",
+	},
+	'5': {
+		"██████",
+		"██    ",
+		"█████\uE0B8",
+		"    ██",
+		"\uE0BE████\uE0BC",
+	},
+	'6': {
+		"\uE0BA████\uE0B8",
+		"██    ",
+		"█████\uE0B8",
+		"██  ██",
+		"\uE0BE████\uE0BC",
+	},
+	'7': {
+		"██████",
+		"   \uE0BA█\uE0BC",
+		"  \uE0BA█\uE0BC ",
+		" \uE0BA█\uE0BC  ",
+		"\uE0BA█\uE0BC   ",
+	},
+	'8': {
+		"\uE0BA████\uE0B8",
+		"██  ██",
+		"██████",
+		"██  ██",
+		"\uE0BE████\uE0BC",
+	},
+	'9': {
+		"\uE0BA████\uE0B8",
+		"██  ██",
+		"\uE0BE█████",
+		"    ██",
+		"\uE0BE████\uE0BC",
 	},
 	':': {
 		"      ",
