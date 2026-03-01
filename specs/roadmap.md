@@ -111,7 +111,7 @@ character font, centered in the terminal.
 
 ---
 
-## Milestone 3.5 — Full Data Model
+## Milestone 3.5 — Full Data Model ✓
 
 **Delivers:** All core structs and enums defined across packages. No new
 user-visible behavior — this is a foundation milestone that prevents
@@ -166,6 +166,7 @@ type Timer struct {
 ```
 
 Key behaviors:
+
 - `Tick(elapsed)` advances `timeLeft`; in auto mode, hitting zero advances
   to the next interval (or transitions to `TimerDone`); in manual mode,
   `timeLeft` continues past zero into negative territory
@@ -193,6 +194,7 @@ type Stopwatch struct {
 ```
 
 Key behaviors:
+
 - `Tick(elapsed)` advances `elapsed` when running
 - `Lap()` appends current `elapsed` to `laps` and resets `elapsed` to zero
 - `Laps()` returns the lap slice
@@ -293,7 +295,7 @@ func Default() Config // returns a Config with all defaults populated
 
 ---
 
-## Milestone 4 — Command Prompt
+## Milestone 4 — Command Prompt ✓
 
 **Delivers:** `:` opens an inline command prompt. `set <seconds>` or
 `set <m:ss>` configures the timer, transitioning to `Ready` state.
