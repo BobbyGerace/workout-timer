@@ -48,6 +48,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if err != nil {
 				m.prompt.Error = err.Error()
 				cmd = nil
+			} else {
+				m.prompt.Open = false
+				m.prompt.Error = ""
+				m.prompt.Input.SetValue("")
 			}
 		default:
 			m.prompt.Input, cmd = m.prompt.Input.Update(msg)
@@ -55,7 +59,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 
-	if command, ok := m.config.Keybindings[msg.String()]; ok {
+	key := msg.String()
+	if key == " " {
+		key = "space"
+	}
+	if command, ok := m.config.Keybindings[key]; ok {
 		m, cmd, _ = m.executeCommand(command)
 		return m, cmd
 	}

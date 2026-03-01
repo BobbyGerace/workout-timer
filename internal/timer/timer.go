@@ -37,14 +37,18 @@ func New(intervals []time.Duration, rounds int, mode types.Mode) *Timer {
 }
 
 func (t *Timer) Start() {
-	if t.state == TimerReady || t.state == TimerPaused {
+	if t.state == TimerReady {
 		t.state = TimerRunning
 	}
 }
 
-func (t *Timer) Pause() {
+// For convenience, this will also start the timer if it is TimerReady,
+// or restart it if it is TimerDone
+func (t *Timer) TogglePause() {
 	if t.state == TimerRunning {
 		t.state = TimerPaused
+	} else {
+		t.state = TimerRunning
 	}
 }
 

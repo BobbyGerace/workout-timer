@@ -31,16 +31,16 @@ Timer counts up from zero indefinitely until paused. Supports laps — each lap 
 
 All keybindings are configurable via the config file.
 
-| Key           | Action                                                        |
-| ------------- | ------------------------------------------------------------- |
-| `Enter`       | Start timer / advance to next interval / lap (stopwatch mode) |
-| `Space` / `p` | Pause / unpause (toggle)                                      |
-| `+`           | Add time to current timer (default: 30s, configurable)        |
-| `-`           | Subtract time from current timer (floors at 0:00)             |
-| `b`           | Go back to previous interval                                  |
-| `l`           | Alias for `Enter` (convenient for laps in stopwatch mode)     |
-| `?`           | Show help overlay (keybindings and commands)                  |
-| `:`           | Open command prompt                                           |
+| Key           | Action                                                    |
+| ------------- | --------------------------------------------------------- |
+| `Enter`       | Advance to next interval / lap (stopwatch mode)           |
+| `Space` / `p` | Start Timer / Pause / unpause (toggle)                    |
+| `+`           | Add time to current timer (default: 30s, configurable)    |
+| `-`           | Subtract time from current timer (floors at 0:00)         |
+| `b`           | Go back to previous interval                              |
+| `l`           | Alias for `Enter` (convenient for laps in stopwatch mode) |
+| `?`           | Show help overlay (keybindings and commands)              |
+| `:`           | Open command prompt                                       |
 
 ## Commands
 

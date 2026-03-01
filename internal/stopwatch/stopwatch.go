@@ -25,15 +25,22 @@ func New() *Stopwatch {
 }
 
 func (s *Stopwatch) Start() {
-	if s.state == StopwatchReady || s.state == StopwatchPaused {
+	if s.state == StopwatchReady {
 		s.state = StopwatchRunning
 	}
 }
 
-func (s *Stopwatch) Pause() {
+func (s *Stopwatch) TogglePause() {
 	if s.state == StopwatchRunning {
 		s.state = StopwatchPaused
+	} else if s.state == StopwatchPaused {
+		s.state = StopwatchRunning
 	}
+}
+
+// Next records a lap, matching the Program interface. Equivalent to Lap().
+func (s *Stopwatch) Next() {
+	s.Lap()
 }
 
 func (s *Stopwatch) Tick(elapsed time.Duration) {

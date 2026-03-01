@@ -24,6 +24,24 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 	case "quit", "q":
 		return m, tea.Quit, nil
 
+	case "start":
+		if m.prog != nil {
+			m.prog.Start()
+		}
+		return m, nil, nil
+
+	case "next":
+		if m.prog != nil {
+			m.prog.Next()
+		}
+		return m, nil, nil
+
+	case "pause", "resume":
+		if m.prog != nil {
+			m.prog.TogglePause()
+		}
+		return m, nil, nil
+
 	case "prompt":
 		m, cmd := m.openPrompt()
 		return m, cmd, nil
@@ -34,9 +52,6 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 			return m, nil, err
 		}
 		m.prog = p
-		m.prompt.Open = false
-		m.prompt.Error = ""
-		m.prompt.Input.SetValue("")
 		return m, nil, nil
 	}
 

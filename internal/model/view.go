@@ -20,6 +20,9 @@ var hintStyle = lipgloss.NewStyle().
 var errorStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("9"))
 
+var pausedStyle = lipgloss.NewStyle().
+	Faint(true)
+
 func (m Model) View() string {
 	promptLines := m.renderPrompt()
 	promptHeight := len(promptLines)
@@ -38,7 +41,10 @@ func (m Model) View() string {
 		timeStr := formatTime(m.prog.TimeDisplay())
 		rows := renderer.BigDigits(timeStr)
 		content := timerStyle.Render(strings.Join(rows, "\n"))
-		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Center, content)
+		if m.AppState() == Paused {
+			content += "\n\n" + pausedStyle.Render("PAUSED")
+		}
+		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Top, "\n"+content)
 	}
 
 	if promptHeight == 0 {
@@ -51,7 +57,7 @@ func (m Model) renderPrompt() []string {
 	if !m.prompt.Open {
 		return nil
 	}
-	lines := []string{": " + m.prompt.Input.View()}
+	lines := []string{m.prompt.Input.View()}
 	if m.prompt.Error != "" {
 		lines = append(lines, errorStyle.Render(m.prompt.Error))
 	}

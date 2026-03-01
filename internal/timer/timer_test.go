@@ -40,7 +40,7 @@ func TestPauseStopsTicking(t *testing.T) {
 	timer := newManual(10 * time.Second)
 	timer.Start()
 	timer.Tick(3 * time.Second)
-	timer.Pause()
+	timer.TogglePause()
 	timer.Tick(3 * time.Second)
 	if timer.TimeDisplay() != 7*time.Second {
 		t.Errorf("paused timer should not advance, got %v", timer.TimeDisplay())
@@ -78,11 +78,11 @@ func TestStateTransitions(t *testing.T) {
 	if timer.State() != program.ProgramRunning {
 		t.Errorf("expected Running, got %v", timer.State())
 	}
-	timer.Pause()
+	timer.TogglePause()
 	if timer.State() != program.ProgramPaused {
 		t.Errorf("expected Paused, got %v", timer.State())
 	}
-	timer.Start()
+	timer.TogglePause()
 	if timer.State() != program.ProgramRunning {
 		t.Errorf("expected Running after resume, got %v", timer.State())
 	}

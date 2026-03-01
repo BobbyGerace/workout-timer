@@ -14,7 +14,8 @@ const (
 type Program interface {
 	Tick(elapsed time.Duration)
 	Start()
-	Pause()
+	TogglePause()
+	Next()
 	State() ProgramState
 	// TimeDisplay returns the duration to render (always non-negative)
 	TimeDisplay() time.Duration
