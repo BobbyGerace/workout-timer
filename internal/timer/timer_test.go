@@ -48,7 +48,8 @@ func TestPauseStopsTicking(t *testing.T) {
 }
 
 func TestManualModeOverflow(t *testing.T) {
-	timer := newManual(5 * time.Second)
+	fiveSecs := time.Duration(5) * time.Second
+	timer := New([]time.Duration{fiveSecs, fiveSecs}, 1, types.ModeManual)
 	timer.Start()
 	timer.Tick(7 * time.Second)
 
@@ -59,9 +60,9 @@ func TestManualModeOverflow(t *testing.T) {
 	if timer.TimeDisplay() != 2*time.Second {
 		t.Errorf("expected TimeDisplay 2s, got %v", timer.TimeDisplay())
 	}
-	// Manual mode does NOT transition to Done on overflow
+	// Manual mode does NOT advance on overflow
 	if timer.State() == program.ProgramDone {
-		t.Error("manual mode should not auto-finish")
+		t.Error("manual mode should not auto-advance")
 	}
 }
 
