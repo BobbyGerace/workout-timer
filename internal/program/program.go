@@ -12,7 +12,7 @@ const (
 )
 
 type Program interface {
-	Tick(elapsed time.Duration)
+	Tick(elapsed time.Duration) bool
 	Start()
 	TogglePause()
 	Next()

@@ -44,10 +44,11 @@ func (s *Stopwatch) Next() {
 	s.Lap()
 }
 
-func (s *Stopwatch) Tick(elapsed time.Duration) {
+func (s *Stopwatch) Tick(elapsed time.Duration) bool {
 	if s.state == StopwatchRunning {
 		s.elapsed += elapsed
 	}
+	return false
 }
 
 func (s *Stopwatch) Lap() {

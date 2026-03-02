@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/BobbyGerace/workout-timer/internal/audio"
 	prog "github.com/BobbyGerace/workout-timer/internal/program"
 )
 
@@ -84,7 +85,9 @@ func (m Model) handleTick(msg tickMsg) (tea.Model, tea.Cmd) {
 	now := time.Time(msg)
 	if !m.lastTick.IsZero() && m.prog != nil && m.prog.State() == prog.ProgramRunning {
 		elapsed := now.Sub(m.lastTick)
-		m.prog.Tick(elapsed)
+		if m.prog.Tick(elapsed) {
+			audio.Beep()
+		}
 		if m.prog.State() == prog.ProgramDone && m.completionMsg == "" {
 			m.completionMsg = completionMessages[rand.Intn(len(completionMessages))]
 		}

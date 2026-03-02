@@ -53,14 +53,17 @@ func (t *Timer) TogglePause() {
 	}
 }
 
-func (t *Timer) Tick(elapsed time.Duration) {
+func (t *Timer) Tick(elapsed time.Duration) bool {
 	if t.state != TimerRunning {
-		return
+		return false
 	}
+	prev := t.timeLeft
 	t.timeLeft -= elapsed
+	crossedZero := prev > 0 && t.timeLeft <= 0
 	if (t.mode == types.ModeAuto || t.isFinalInterval()) && t.timeLeft <= 0 {
 		t.Next()
 	}
+	return crossedZero
 }
 
 // Next advances to the next interval, or to the next round if
