@@ -30,6 +30,10 @@ var overflowStyle = lipgloss.NewStyle().
 var pausedStyle = lipgloss.NewStyle().
 	Faint(true)
 
+var completionStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("10")).
+	Bold(true)
+
 func (m Model) View() string {
 	promptLines := m.renderPrompt()
 	promptHeight := len(promptLines)
@@ -41,10 +45,16 @@ func (m Model) View() string {
 	case Unconfigured:
 		hint := hintStyle.Render("Press : to configure or ? for help")
 		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Center, hint)
+	case Done:
+		content := m.renderTime(mainHeight)
+		content += "\n\n" + completionStyle.Render(m.completionMsg)
+		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Top, "\n"+content)
 	default:
 		content := m.renderTime(mainHeight)
 		if m.AppState() == Paused {
 			content += "\n\n" + pausedStyle.Render("PAUSED")
+		} else if m.AppState() == Ready {
+			content += "\n\n" + hintStyle.Render("Press space to start")
 		}
 		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Top, "\n"+content)
 	}

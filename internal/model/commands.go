@@ -52,6 +52,7 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 			return m, nil, err
 		}
 		m.prog = p
+		m.completionMsg = ""
 		return m, nil, nil
 	}
 

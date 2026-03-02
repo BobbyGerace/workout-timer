@@ -58,7 +58,7 @@ func (t *Timer) Tick(elapsed time.Duration) {
 		return
 	}
 	t.timeLeft -= elapsed
-	if t.mode == types.ModeAuto && t.timeLeft <= 0 {
+	if (t.mode == types.ModeAuto || t.isFinalInterval()) && t.timeLeft <= 0 {
 		t.Next()
 	}
 }
@@ -69,6 +69,11 @@ func (t *Timer) Tick(elapsed time.Duration) {
 // called by the user pressing Enter; in auto mode Tick calls it automatically.
 // rounds == 0 means loop forever and should never reach TimerDone.
 func (t *Timer) Next() {
+	// If someone does this, it's probably an accident
+	if t.state == TimerReady || t.state == TimerDone {
+		return
+	}
+
 	// Always inc / reset the interval, even when done
 	t.currentInterval = (t.currentInterval + 1) % len(t.intervals)
 
@@ -139,4 +144,8 @@ func (t *Timer) RoundProgress() (current, total int) {
 		return 0, 0
 	}
 	return t.currentRound + 1, t.rounds
+}
+
+func (t *Timer) isFinalInterval() bool {
+	return t.currentInterval == len(t.intervals)-1 && t.currentRound == t.rounds-1
 }

@@ -34,13 +34,14 @@ type Prompt struct {
 type tickMsg time.Time
 
 type Model struct {
-	width, height int
-	prog          prog.Program // nil when Unconfigured
-	lastTick      time.Time
-	toast         Toast
-	prompt        Prompt
-	showHelp      bool          // (M19)
-	config        config.Config // (M18)
+	width, height  int
+	prog           prog.Program // nil when Unconfigured
+	lastTick       time.Time
+	toast          Toast
+	prompt         Prompt
+	showHelp       bool          // (M19)
+	config         config.Config // (M18)
+	completionMsg  string
 }
 
 func (m Model) AppState() AppState {

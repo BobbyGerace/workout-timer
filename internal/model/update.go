@@ -1,6 +1,7 @@
 package model
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -8,6 +9,14 @@ import (
 
 	prog "github.com/BobbyGerace/workout-timer/internal/program"
 )
+
+var completionMessages = []string{
+	"Done!",
+	"Great work!",
+	"Finished!",
+	"Nice job!",
+	"Workout complete!",
+}
 
 func tick() tea.Cmd {
 	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
@@ -76,6 +85,9 @@ func (m Model) handleTick(msg tickMsg) (tea.Model, tea.Cmd) {
 	if !m.lastTick.IsZero() && m.prog != nil && m.prog.State() == prog.ProgramRunning {
 		elapsed := now.Sub(m.lastTick)
 		m.prog.Tick(elapsed)
+		if m.prog.State() == prog.ProgramDone && m.completionMsg == "" {
+			m.completionMsg = completionMessages[rand.Intn(len(completionMessages))]
+		}
 	}
 	m.lastTick = now
 	return m, tick()
