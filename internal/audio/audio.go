@@ -12,9 +12,6 @@ import (
 	oto "github.com/ebitengine/oto/v3"
 )
 
-//go:embed beep.wav
-var beepWav []byte
-
 var (
 	otoCtx  *oto.Context
 	otoOnce sync.Once
@@ -58,6 +55,8 @@ func playBeep() error {
 	return nil
 }
 
+var rampDuration = 0.03
+
 // generateSine returns raw 16-bit signed little-endian PCM for a sine wave
 // at the given frequency (Hz) and duration (seconds).
 func generateSine(freq, duration float64, sampleRate int) []byte {
@@ -66,6 +65,15 @@ func generateSine(freq, duration float64, sampleRate int) []byte {
 	for i := 0; i < numSamples; i++ {
 		t := float64(i) / float64(sampleRate)
 		sample := math.Sin(2 * math.Pi * freq * t)
+
+		// Round off the attack / decay to make the beep
+		// a little less jarring
+		if t < rampDuration {
+			sample = sample * t / rampDuration
+		} else if t > duration-rampDuration {
+			sample = sample * (duration - t) / rampDuration
+		}
+
 		val := int16(sample * 16383) // half amplitude
 		buf[i*2] = byte(val)
 		buf[i*2+1] = byte(val >> 8)
