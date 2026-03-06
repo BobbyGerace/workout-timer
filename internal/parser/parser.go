@@ -64,6 +64,44 @@ func ParseSet(input string, defaultMode types.Mode) (prog.Program, error) {
 	return timer.New(intervals, rounds, mode), nil
 }
 
+// ParseCommand validates a command string without executing it.
+// Returns nil if the command is syntactically valid, or an error describing the problem.
+// This is the canonical validator shared by the prompt, FIFO listener, and CLI.
+func ParseCommand(input string, defaultMode types.Mode) error {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return fmt.Errorf("empty command")
+	}
+	fields := strings.Fields(input)
+	verb := fields[0]
+
+	switch verb {
+	case "quit", "q", "start", "next", "pause", "resume", "back",
+		"reset", "clear", "status", "stopwatch":
+		if len(fields) != 1 {
+			return fmt.Errorf("%s takes no arguments", verb)
+		}
+		return nil
+
+	case "add", "subtract":
+		if len(fields) != 2 {
+			return fmt.Errorf("%s requires a duration (e.g. 30 or 1:30)", verb)
+		}
+		d, err := ParseDuration(fields[1])
+		if err != nil || d <= 0 {
+			return fmt.Errorf("invalid duration: %q", fields[1])
+		}
+		return nil
+
+	case "set":
+		_, err := ParseSet(input, defaultMode)
+		return err
+
+	default:
+		return fmt.Errorf("unknown command: %q", verb)
+	}
+}
+
 // parseDurationList splits a comma-separated duration string and parses each segment.
 func parseDurationList(s string) ([]time.Duration, error) {
 	parts := strings.Split(s, ",")

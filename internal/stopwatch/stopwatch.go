@@ -75,6 +75,11 @@ func (s *Stopwatch) IsLowTime(threshold time.Duration) bool {
 func (s *Stopwatch) Back()                    {}
 func (s *Stopwatch) Add(d time.Duration)      {}
 func (s *Stopwatch) Subtract(d time.Duration) {}
+func (s *Stopwatch) Reset() {
+	s.elapsed = 0
+	s.laps = nil
+	s.state = StopwatchReady
+}
 
 func (s *Stopwatch) IntervalProgress() (current, total int) { return 0, 0 }
 func (s *Stopwatch) RoundProgress() (current, total int)    { return 0, 0 }

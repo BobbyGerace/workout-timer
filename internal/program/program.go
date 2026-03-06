@@ -19,6 +19,8 @@ type Program interface {
 	// Back returns to the start of the previous interval (or previous round).
 	// No-op at the first interval of the first round.
 	Back()
+	// Reset restarts the program from the beginning, returning to Ready state.
+	Reset()
 	// Add increases remaining time by d. No-op when in overflow.
 	Add(d time.Duration)
 	// Subtract decreases remaining time by d, floored at 0. No-op when in overflow.

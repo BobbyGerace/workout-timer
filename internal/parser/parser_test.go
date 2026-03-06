@@ -113,6 +113,63 @@ func TestParseSet(t *testing.T) {
 	}
 }
 
+func TestParseCommand(t *testing.T) {
+	auto := types.ModeAuto
+
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		// ── No-arg commands ───────────────────────────────────────────────
+		{"quit", false},
+		{"q", false},
+		{"next", false},
+		{"pause", false},
+		{"resume", false},
+		{"back", false},
+		{"reset", false},
+		{"clear", false},
+		{"status", false},
+		{"stopwatch", false},
+
+		// ── add / subtract ────────────────────────────────────────────────
+		{"add 30", false},
+		{"subtract 30", false},
+		{"add 1:30", false},
+		{"subtract 1:30", false},
+		{"add", true},
+		{"subtract", true},
+		{"add abc", true},
+		{"add 0", true},
+		{"add 30 extra", true},
+
+		// ── set (delegates to ParseSet) ───────────────────────────────────
+		{"set 90", false},
+		{"set auto 1:30,60 x3", false},
+		{"set bad", true},
+
+		// ── no-arg commands with extra args ───────────────────────────────
+		{"quit now", true},
+		{"reset all", true},
+
+		// ── unknown / empty ───────────────────────────────────────────────
+		{"", true},
+		{"fly", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			err := ParseCommand(tt.input, auto)
+			if tt.wantErr && err == nil {
+				t.Errorf("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestParseDurationList(t *testing.T) {
 	tests := []struct {
 		input    string

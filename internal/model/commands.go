@@ -67,6 +67,18 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 		}
 		return m, nil, nil
 
+	case "reset":
+		if m.prog != nil {
+			m.prog.Reset()
+			m.completionMsg = ""
+		}
+		return m, nil, nil
+
+	case "clear":
+		m.prog = nil
+		m.completionMsg = ""
+		return m, nil, nil
+
 	case "prompt":
 		m, cmd := m.openPrompt()
 		return m, cmd, nil

@@ -119,6 +119,14 @@ func (t *Timer) Back() {
 	t.timeLeft = t.intervals[t.currentInterval]
 }
 
+// Reset restarts the timer from the beginning, returning to Ready state.
+func (t *Timer) Reset() {
+	t.currentInterval = 0
+	t.currentRound = 0
+	t.timeLeft = t.intervals[0]
+	t.state = TimerReady
+}
+
 // Add increases timeLeft by d. No-op when in overflow.
 func (t *Timer) Add(d time.Duration) {
 	if t.IsOverflow() {
