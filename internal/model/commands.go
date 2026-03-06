@@ -42,6 +42,31 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 		}
 		return m, nil, nil
 
+	case "back":
+		if m.prog != nil {
+			m.prog.Back()
+		}
+		return m, nil, nil
+
+	case "add", "subtract":
+		if m.prog == nil {
+			return m, nil, nil
+		}
+		parts := strings.Fields(command)
+		if len(parts) != 2 {
+			return m, nil, fmt.Errorf("%s requires a duration (e.g. 30 or 1:30)", verb)
+		}
+		d, err := parser.ParseDuration(parts[1])
+		if err != nil || d <= 0 {
+			return m, nil, fmt.Errorf("invalid duration: %q", parts[1])
+		}
+		if verb == "add" {
+			m.prog.Add(d)
+		} else {
+			m.prog.Subtract(d)
+		}
+		return m, nil, nil
+
 	case "prompt":
 		m, cmd := m.openPrompt()
 		return m, cmd, nil

@@ -381,7 +381,7 @@ auto/manual mode flag. Interval counter (`3/10`) is displayed.
 
 ---
 
-## Milestone 8 — Auto-Advance
+## Milestone 8 — Auto-Advance ✓
 
 **Delivers:** In auto mode, the timer advances to the next interval when it
 reaches zero. After the last interval of the last round, the program ends.
@@ -403,7 +403,7 @@ reaches zero. After the last interval of the last round, the program ends.
 
 ---
 
-## Milestone 9 — Manual Mode + Audio
+## Milestone 9 — Manual Mode + Audio ✓
 
 **Delivers:** In manual mode, timer beeps at zero and begins counting up in
 cyan. `Enter` advances to the next interval.

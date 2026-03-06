@@ -98,8 +98,45 @@ func (t *Timer) Next() {
 }
 
 // Back returns to the start of the previous interval, or the previous round
-// if already at the first interval. Implemented in M10.
-func (t *Timer) Back() {}
+// if already at the first interval. No-op at the first interval of the first round.
+func (t *Timer) Back() {
+	// Like next, this is only valid when timer is running or paused
+	if t.state == TimerReady || t.state == TimerDone {
+		return
+	}
+
+	if t.currentInterval > 0 {
+		// if it's not the first interval, just go back
+		t.currentInterval--
+	} else if t.currentRound > 0 {
+		// if it is the first interval, go to the last interval of the last round,
+		// unless it's the first round too, then do nothing
+		t.currentRound--
+		t.currentInterval = len(t.intervals) - 1
+	}
+
+	// In any case, always reset the time
+	t.timeLeft = t.intervals[t.currentInterval]
+}
+
+// Add increases timeLeft by d. No-op when in overflow.
+func (t *Timer) Add(d time.Duration) {
+	if t.IsOverflow() {
+		return
+	}
+	t.timeLeft += d
+}
+
+// Subtract decreases timeLeft by d, floored at 0. No-op when in overflow.
+func (t *Timer) Subtract(d time.Duration) {
+	if t.IsOverflow() {
+		return
+	}
+	t.timeLeft -= d
+	if t.timeLeft < 0 {
+		t.timeLeft = 0
+	}
+}
 
 // TimeDisplay returns the duration to render — always non-negative.
 func (t *Timer) TimeDisplay() time.Duration {

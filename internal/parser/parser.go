@@ -69,7 +69,7 @@ func parseDurationList(s string) ([]time.Duration, error) {
 	parts := strings.Split(s, ",")
 	durations := make([]time.Duration, 0, len(parts))
 	for _, p := range parts {
-		d, err := parseDuration(strings.TrimSpace(p))
+		d, err := ParseDuration(strings.TrimSpace(p))
 		if err != nil {
 			return nil, err
 		}
@@ -78,10 +78,10 @@ func parseDurationList(s string) ([]time.Duration, error) {
 	return durations, nil
 }
 
-// parseDuration converts a duration string into a time.Duration.
+// ParseDuration converts a duration string into a time.Duration.
 // Accepts plain seconds ("90") or m:ss format ("1:30").
 // Returns an error for invalid input (non-numeric, bad m:ss format, seconds >= 60).
-func parseDuration(s string) (time.Duration, error) {
+func ParseDuration(s string) (time.Duration, error) {
 	fields := strings.Split(s, ":")
 	if len(fields) == 2 {
 		minutes, err := strconv.Atoi(fields[0])

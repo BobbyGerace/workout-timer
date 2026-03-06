@@ -16,6 +16,13 @@ type Program interface {
 	Start()
 	TogglePause()
 	Next()
+	// Back returns to the start of the previous interval (or previous round).
+	// No-op at the first interval of the first round.
+	Back()
+	// Add increases remaining time by d. No-op when in overflow.
+	Add(d time.Duration)
+	// Subtract decreases remaining time by d, floored at 0. No-op when in overflow.
+	Subtract(d time.Duration)
 	State() ProgramState
 	// TimeDisplay returns the duration to render (always non-negative)
 	TimeDisplay() time.Duration
