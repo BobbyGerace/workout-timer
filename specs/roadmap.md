@@ -246,14 +246,9 @@ func (m Model) AppState() AppState {
 }
 ```
 
-`Toast` and `Prompt` are extracted as sub-structs:
+`Prompt` are extracted as sub-struct:
 
 ```go
-type Toast struct {
-    Message string
-    Expiry  time.Time
-}
-
 type Prompt struct {
     Input textinput.Model
     Error string
@@ -264,7 +259,6 @@ type Model struct {
     width, height int
     program       program.Program  // nil when Unconfigured
     lastTick      time.Time
-    toast         Toast
     prompt        Prompt
     showHelp      bool            // (M19)
     config        config.Config   // (M18)
@@ -427,7 +421,7 @@ cyan. `Enter` advances to the next interval.
 
 ---
 
-## Milestone 10 — Back + Add/Subtract
+## Milestone 10 — Back + Add/Subtract ✓
 
 **Delivers:** `b` goes back to the previous interval. `+` adds 30s. `-`
 subtracts 30s (floors at 0:00).
@@ -449,22 +443,7 @@ subtracts 30s (floors at 0:00).
 
 ## Milestone 11 — Toast Notifications
 
-**Delivers:** A transient notification area at the bottom of the screen for
-brief auto-dismissing messages.
-
-**Verify:**
-
-- `b` at the first interval of the first round shows "Already at the first interval"
-- Notification disappears automatically after ~2 seconds
-- A new notification immediately replaces any existing one
-
-**Notes:**
-
-- Store `toastMsg string` and `toastExpiry time.Time` in the model
-- On each tick, clear toast if `time.Now().After(toastExpiry)`
-- Rendered as a single dim line at the bottom; lowest display priority —
-  dropped first if vertical space is tight
-- Retrofit `b` at first interval to use this instead of silently doing nothing
+REMOVED - no longer necessary
 
 ---
 
@@ -647,8 +626,7 @@ considered complete.
 
 **Items:**
 
-- Confirm `b` behavior at first interval/first round (toast added in M11,
-  but verify the exact message and no-op behavior is correct)
+- Confirm `b` behavior at first interval/first round
 - `status` command output formatting
 - Smooth handling of rapid keypresses (debounce or queue)
 - Test FIFO behavior when the pipe has no reader / when commands arrive fast

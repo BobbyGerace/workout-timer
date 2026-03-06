@@ -20,11 +20,6 @@ const (
 	Done
 )
 
-type Toast struct {
-	Message string
-	Expiry  time.Time
-}
-
 type Prompt struct {
 	Input textinput.Model
 	Error string
@@ -34,14 +29,13 @@ type Prompt struct {
 type tickMsg time.Time
 
 type Model struct {
-	width, height  int
-	prog           prog.Program // nil when Unconfigured
-	lastTick       time.Time
-	toast          Toast
-	prompt         Prompt
-	showHelp       bool          // (M19)
-	config         config.Config // (M18)
-	completionMsg  string
+	width, height int
+	prog          prog.Program // nil when Unconfigured
+	lastTick      time.Time
+	prompt        Prompt
+	showHelp      bool          // (M19)
+	config        config.Config // (M18)
+	completionMsg string
 }
 
 func (m Model) AppState() AppState {
