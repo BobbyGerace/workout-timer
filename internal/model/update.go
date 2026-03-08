@@ -34,6 +34,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKey(msg)
 	case tickMsg:
 		return m.handleTick(msg)
+	case FifoMsg:
+		m, cmd, _ := m.executeCommand(msg.Command)
+		return m, cmd
 	}
 	return m, nil
 }

@@ -28,6 +28,9 @@ type Prompt struct {
 
 type tickMsg time.Time
 
+// FifoMsg carries a raw command string received from the FIFO pipe.
+type FifoMsg struct{ Command string }
+
 type Model struct {
 	width, height int
 	prog          prog.Program // nil when Unconfigured
