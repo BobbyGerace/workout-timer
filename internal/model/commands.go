@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/BobbyGerace/workout-timer/internal/parser"
+	"github.com/BobbyGerace/workout-timer/internal/stopwatch"
 )
 
 // executeCommand dispatches a command string, returning the updated model,
@@ -82,6 +83,11 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 	case "prompt":
 		m, cmd := m.openPrompt()
 		return m, cmd, nil
+
+	case "stopwatch":
+		m.prog = stopwatch.New()
+		m.completionMsg = ""
+		return m, nil, nil
 
 	case "set":
 		p, err := parser.ParseSet(command, m.config.DefaultMode)

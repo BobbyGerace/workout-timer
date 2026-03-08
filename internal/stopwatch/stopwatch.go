@@ -34,14 +34,17 @@ func (s *Stopwatch) Start() {
 func (s *Stopwatch) TogglePause() {
 	if s.state == StopwatchRunning {
 		s.state = StopwatchPaused
-	} else if s.state == StopwatchPaused {
+	} else {
 		s.state = StopwatchRunning
 	}
 }
 
 // Next records a lap, matching the Program interface. Equivalent to Lap().
+// No-op unless the stopwatch is running.
 func (s *Stopwatch) Next() {
-	s.Lap()
+	if s.state == StopwatchRunning {
+		s.Lap()
+	}
 }
 
 func (s *Stopwatch) Tick(elapsed time.Duration) bool {
@@ -53,7 +56,6 @@ func (s *Stopwatch) Tick(elapsed time.Duration) bool {
 
 func (s *Stopwatch) Lap() {
 	s.laps = append(s.laps, s.elapsed)
-	s.elapsed = 0
 }
 
 func (s *Stopwatch) Laps() []time.Duration {

@@ -441,13 +441,13 @@ subtracts 30s (floors at 0:00).
 
 ---
 
-## Milestone 11 — Toast Notifications
+## Milestone 11 — Toast Notifications ✓
 
 REMOVED - no longer necessary
 
 ---
 
-## Milestone 12 — Remaining Prompt Commands
+## Milestone 12 — Remaining Prompt Commands ✓
 
 **Delivers:** All playback commands work from the `:` prompt: `pause`, `next`,
 `back`, `add <N>`, `subtract <N>`, `reset`, `clear`, `status`, `quit`/`q`.

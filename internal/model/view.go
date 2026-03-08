@@ -2,12 +2,14 @@ package model
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/BobbyGerace/workout-timer/internal/renderer"
+	"github.com/BobbyGerace/workout-timer/internal/stopwatch"
 )
 
 var labelStyle = lipgloss.NewStyle().Faint(true)
@@ -94,9 +96,54 @@ func (m Model) renderTime(availableHeight int) string {
 	roundCur, roundTotal := m.prog.RoundProgress()
 	if roundTotal > 0 && budgetLeft >= 2 {
 		result += "\n" + labelStyle.Render(fmt.Sprintf("Round %d/%d", roundCur, roundTotal))
+		budgetLeft -= 2
+	}
+
+	if sw, ok := m.prog.(*stopwatch.Stopwatch); ok {
+		laps := sw.Laps()
+		lapNum := len(laps) + 1
+		if budgetLeft >= 2 {
+			result += "\n" + labelStyle.Render(fmt.Sprintf("Lap %02d", lapNum))
+			budgetLeft -= 2
+		}
+		result += renderLapList(laps, budgetLeft)
 	}
 
 	return result
+}
+
+// renderLapList formats completed lap splits for display.
+// Shows the most recent laps that fit within budget lines,
+// prepending a "..." line if older laps are hidden.
+// Each entry is formatted as "  01  0:45" with a leading newline.
+// Returns an empty string if there are no laps or no budget.
+func renderLapList(laps []time.Duration, budget int) string {
+	output := ""
+
+	if len(laps) == 0 || budget <= 0 {
+		return ""
+	}
+
+	startAt := max(0, len(laps)-budget)
+	if startAt > 0 {
+		startAt = max(0, len(laps)-(budget-1)) // reserve 1 line for "..."
+		output += fmt.Sprintf("\n  ...")
+	}
+
+	for i := range laps[startAt:] {
+		j := startAt + i
+		split := laps[j]
+		if j > 0 {
+			split = laps[j] - laps[j-1]
+		}
+
+		mm := math.Floor(split.Minutes())
+		ss := math.Floor(split.Seconds() - mm*60)
+
+		output += fmt.Sprintf("\n  %02d  %02d:%02d", j+1, int(mm), int(ss))
+	}
+
+	return output
 }
 
 func (m Model) renderPrompt() []string {
