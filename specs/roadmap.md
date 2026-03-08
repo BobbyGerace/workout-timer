@@ -468,7 +468,7 @@ REMOVED - no longer necessary
 
 ---
 
-## Milestone 13 — Stopwatch Mode
+## Milestone 13 — Stopwatch Mode ✓
 
 **Delivers:** `stopwatch` command starts a count-up timer. `Enter`/`l` records
 a lap. Lap history displays below the timer if space permits.
@@ -487,7 +487,7 @@ a lap. Lap history displays below the timer if space permits.
 
 ---
 
-## Milestone 14 — CLI Arguments
+## Milestone 14 — CLI Arguments ✓
 
 **Delivers:** Command-line arguments configure the timer on launch, using the
 same grammar as the `set` command.
@@ -509,24 +509,63 @@ same grammar as the `set` command.
 
 ## Milestone 15 — Display Priority + Resize
 
-**Delivers:** Display degrades gracefully when the terminal is small, following
-the priority order from the spec.
+**Delivers:** The display degrades across three tiers as terminal height
+decreases. All transitions happen live on resize.
 
-**Verify:**
+### Display Tiers
 
-- Very tall terminal: time + interval counter + round counter + labels all visible
-- Medium terminal: time + interval counter + round counter
-- Small terminal: time + interval counter only
-- Very small terminal: time only
-- Resize in real time — display updates immediately
+Tier thresholds are fixed and mode-independent, computed from the maximum
+content each tier could ever show. The tier is derived at render time — not
+stored in the model.
 
-**Notes:**
+**Tier 1 — Full (`height >= 11`)**
 
-- All layout decisions are made in `View` based on stored `width` and `height`
-- Each display element has a minimum height cost; conditionally include
-  bottom-up based on remaining space
-- "Downsize" for very small terminals: consider a half-height fallback font or
-  plain `MM:SS` text if the big digits don't fit
+Big-digit clock (5 lines) with top-padding, labels below as budget allows
+(interval counter, round counter, lap list with `...` elision). This is the
+current behavior.
+
+Minimum line count: 5 (digits) + 2 (Place top/bottom padding) + 2 (interval
+label) + 2 (round label) = **11**.
+
+**Tier 2 — Compact (`height >= 4`)**
+
+Plain-text `M:SS` clock on line 1, left-aligned, no padding. Same labels as
+Tier 1 follow on subsequent lines if applicable:
+
+- Interval counter (e.g. `Interval 2/5`) — if > 1 interval
+- Round counter (e.g. `Round 1/3`) — if > 1 round
+- Lap header (e.g. `Lap 03`) — stopwatch only
+- State indicator: `PAUSED` / `Press space to start` / nothing when running
+
+No big digits, no centering, no top padding, no lap duration list.
+
+Maximum line count: 1 (time) + 1 (interval) + 1 (round) + 1 (state) = **4**.
+
+**Tier 3 — Minimal (`height < 4`)**
+
+Everything on a single left-aligned line, space-separated:
+
+```
+1:30  2/5  Round 1/3  PAUSED
+0:45  Lap 03  PAUSED
+```
+
+Includes: time, interval progress (if > 1 interval), round progress (if > 1
+round), lap count (stopwatch), and state indicator (`PAUSED` / `READY`).
+No lap durations — no room.
+
+### Verify
+
+- height ≥ 11: big digits + all applicable labels
+- 4 ≤ height ≤ 10: plain-text clock + applicable labels, left-aligned
+- height < 4: single-line with time + context + state
+- Resize in real time — transitions happen immediately in both directions
+
+### Notes
+
+- All layout decisions made in `View` based on stored `width` and `height`
+- The existing height-budget system in `renderTime` handles label elision
+  within Tier 1; Tier 2 and 3 are new rendering paths added in this milestone
 
 ---
 

@@ -43,22 +43,18 @@ func (m Model) View() string {
 	mainHeight := max(m.height-promptHeight, 0)
 
 	var mainContent string
-	switch m.AppState() {
-	case Unconfigured:
+	if m.AppState() == Unconfigured {
 		hint := hintStyle.Render("Press : to configure or ? for help")
 		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Center, hint)
-	case Done:
-		content := m.renderTime(mainHeight)
-		content += "\n\n" + completionStyle.Render(m.completionMsg)
-		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Top, "\n"+content)
-	default:
-		content := m.renderTime(mainHeight)
-		if m.AppState() == Paused {
-			content += "\n\n" + pausedStyle.Render("PAUSED")
-		} else if m.AppState() == Ready {
-			content += "\n\n" + hintStyle.Render("Press space to start")
+	} else {
+		switch displayTier(mainHeight) {
+		case 1:
+			mainContent = m.renderTier1(mainHeight)
+		case 2:
+			mainContent = m.renderTier2(mainHeight)
+		default:
+			mainContent = m.renderTier3(mainHeight)
 		}
-		mainContent = lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Top, "\n"+content)
 	}
 
 	if promptHeight == 0 {
@@ -67,35 +63,69 @@ func (m Model) View() string {
 	return mainContent + "\n" + strings.Join(promptLines, "\n")
 }
 
+// displayTier returns 1, 2, or 3 based on available height.
+// Thresholds are fixed regardless of program mode or content.
+//
+//	T1 (≥11): big digits + labels
+//	T2 (≥4):  plain text clock + labels, left-aligned
+//	T3 (<4):  single line, left-aligned
+func displayTier(height int) int {
+	if height >= 11 {
+		return 1
+	} else if height >= 4 {
+		return 2
+	}
+	return 3
+}
+
+// timeStyle returns the lipgloss style for the clock based on timer state.
+func (m Model) timeStyle() lipgloss.Style {
+	if m.prog.IsLowTime(time.Duration(m.config.LowTimeWarning) * time.Second) {
+		return lowTimeStyle
+	} else if m.prog.IsOverflow() {
+		return overflowStyle
+	}
+	return timerStyle
+}
+
+// styledTime returns the plain-text clock string with color applied.
+func (m Model) styledTime() string {
+	return m.timeStyle().Render(formatTime(m.prog.TimeDisplay()))
+}
+
+// compactStateLabel returns a state indicator for T2/T3, or "" when running.
+func (m Model) compactStateLabel() string {
+	switch m.AppState() {
+	case Done:
+		return completionStyle.Render(m.completionMsg)
+	case Paused:
+		return pausedStyle.Render("PAUSED")
+	case Ready:
+		return hintStyle.Render("READY")
+	}
+	return ""
+}
+
 // bigDigitHeight is the fixed row count of the big-digit font.
 const bigDigitHeight = 5
 
-func (m Model) renderTime(availableHeight int) string {
+func (m Model) renderTier1(mainHeight int) string {
 	timeStr := formatTime(m.prog.TimeDisplay())
 	rows := renderer.BigDigits(timeStr)
-
-	style := timerStyle
-	timeIsLow := m.prog.IsLowTime(time.Duration(m.config.LowTimeWarning) * time.Second)
-	if timeIsLow {
-		style = lowTimeStyle
-	} else if m.prog.IsOverflow() {
-		style = overflowStyle
-	}
-
-	result := style.Render(strings.Join(rows, "\n")) + "\n"
+	content := m.timeStyle().Render(strings.Join(rows, "\n")) + "\n"
 
 	// Budget remaining lines for labels (each costs 1 row + 1 blank separator).
-	budgetLeft := availableHeight - bigDigitHeight - 2 // -2 for the leading and trailing  "\n" in Place
+	budgetLeft := mainHeight - bigDigitHeight - 2 // -2 for the leading and trailing "\n" in Place
 
 	intervalCur, intervalTotal := m.prog.IntervalProgress()
 	if intervalTotal > 0 && budgetLeft >= 2 {
-		result += "\n" + labelStyle.Render(fmt.Sprintf("Interval %d/%d", intervalCur, intervalTotal))
+		content += "\n" + labelStyle.Render(fmt.Sprintf("Interval %d/%d", intervalCur, intervalTotal))
 		budgetLeft -= 2
 	}
 
 	roundCur, roundTotal := m.prog.RoundProgress()
 	if roundTotal > 0 && budgetLeft >= 2 {
-		result += "\n" + labelStyle.Render(fmt.Sprintf("Round %d/%d", roundCur, roundTotal))
+		content += "\n" + labelStyle.Render(fmt.Sprintf("Round %d/%d", roundCur, roundTotal))
 		budgetLeft -= 2
 	}
 
@@ -103,13 +133,77 @@ func (m Model) renderTime(availableHeight int) string {
 		laps := sw.Laps()
 		lapNum := len(laps) + 1
 		if budgetLeft >= 2 {
-			result += "\n" + labelStyle.Render(fmt.Sprintf("Lap %02d", lapNum))
+			content += "\n" + labelStyle.Render(fmt.Sprintf("Lap %02d", lapNum))
 			budgetLeft -= 2
 		}
-		result += renderLapList(laps, budgetLeft)
+		content += renderLapList(laps, budgetLeft)
 	}
 
-	return result
+	switch m.AppState() {
+	case Done:
+		content += "\n\n" + completionStyle.Render(m.completionMsg)
+	case Paused:
+		content += "\n\n" + pausedStyle.Render("PAUSED")
+	case Ready:
+		content += "\n\n" + hintStyle.Render("Press space to start")
+	}
+
+	return lipgloss.Place(m.width, mainHeight, lipgloss.Center, lipgloss.Top, "\n"+content)
+}
+
+func (m Model) renderTier2(mainHeight int) string {
+	lines := []string{m.styledTime()}
+
+	intervalCur, intervalTotal := m.prog.IntervalProgress()
+	if intervalTotal > 0 {
+		lines = append(lines, labelStyle.Render(fmt.Sprintf("Interval %d/%d", intervalCur, intervalTotal)))
+	}
+
+	roundCur, roundTotal := m.prog.RoundProgress()
+	if roundTotal > 0 {
+		lines = append(lines, labelStyle.Render(fmt.Sprintf("Round %d/%d", roundCur, roundTotal)))
+	}
+
+	if sw, ok := m.prog.(*stopwatch.Stopwatch); ok {
+		lapNum := len(sw.Laps()) + 1
+		lines = append(lines, labelStyle.Render(fmt.Sprintf("Lap %02d", lapNum)))
+	}
+
+	if label := m.compactStateLabel(); label != "" {
+		lines = append(lines, label)
+	}
+
+	content := strings.Join(lines, "\n")
+	return lipgloss.Place(m.width, mainHeight, lipgloss.Left, lipgloss.Top, content)
+}
+
+// renderTier3 renders everything on a single left-aligned line.
+// Includes: time, interval progress (if > 1 interval), round progress
+// (if > 1 round), lap count (stopwatch), and state indicator (PAUSED/READY).
+func (m Model) renderTier3(mainHeight int) string {
+	elements := []string{m.styledTime()}
+
+	intervalCur, intervalTotal := m.prog.IntervalProgress()
+	if intervalTotal > 0 {
+		elements = append(elements, labelStyle.Render(fmt.Sprintf("Interval %d/%d", intervalCur, intervalTotal)))
+	}
+
+	roundCur, roundTotal := m.prog.RoundProgress()
+	if roundTotal > 0 {
+		elements = append(elements, labelStyle.Render(fmt.Sprintf("Round %d/%d", roundCur, roundTotal)))
+	}
+
+	if sw, ok := m.prog.(*stopwatch.Stopwatch); ok {
+		lapNum := len(sw.Laps()) + 1
+		elements = append(elements, labelStyle.Render(fmt.Sprintf("Lap %02d", lapNum)))
+	}
+
+	if label := m.compactStateLabel(); label != "" {
+		elements = append(elements, label)
+	}
+
+	content := strings.Join(elements, "  ")
+	return lipgloss.Place(m.width, mainHeight, lipgloss.Left, lipgloss.Top, content)
 }
 
 // renderLapList formats completed lap splits for display.
