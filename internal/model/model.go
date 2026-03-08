@@ -56,13 +56,18 @@ func (m Model) AppState() AppState {
 }
 
 func New() Model {
+	return NewWithProgram(nil)
+}
+
+func NewWithProgram(p prog.Program) Model {
 	input := textinput.New()
 	input.Placeholder = "set 1:30"
 	input.CharLimit = 100
 
 	return Model{
-		config: config.Default(),
-		prompt: Prompt{Input: input},
+		config:  config.Default(),
+		prompt:  Prompt{Input: input},
+		prog:    p,
 	}
 }
 
