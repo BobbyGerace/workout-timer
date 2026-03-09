@@ -80,6 +80,11 @@ func (m Model) executeCommand(command string) (Model, tea.Cmd, error) {
 		m.completionMsg = ""
 		return m, nil, nil
 
+	case "help":
+		m.showHelp = true
+		m.helpScrollOffset = 0
+		return m, nil, nil
+
 	case "prompt":
 		m, cmd := m.openPrompt()
 		return m, cmd, nil

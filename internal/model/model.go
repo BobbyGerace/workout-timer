@@ -32,13 +32,14 @@ type tickMsg time.Time
 type FifoMsg struct{ Command string }
 
 type Model struct {
-	width, height int
-	prog          prog.Program // nil when Unconfigured
-	lastTick      time.Time
-	prompt        Prompt
-	showHelp      bool          // (M19)
-	config        config.Config // (M18)
-	completionMsg string
+	width, height    int
+	prog             prog.Program // nil when Unconfigured
+	lastTick         time.Time
+	prompt           Prompt
+	showHelp         bool          // (M19)
+	helpScrollOffset int           // (M19)
+	config           config.Config // (M18)
+	completionMsg    string
 }
 
 func (m Model) AppState() AppState {

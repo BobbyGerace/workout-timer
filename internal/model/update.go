@@ -49,6 +49,23 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
+	// Scroll keys navigate the help overlay; anything else dismisses it
+	if m.showHelp {
+		switch msg.String() {
+		case "up", "k":
+			m.helpScrollOffset = max(0, m.helpScrollOffset-1)
+		case "down", "j":
+			m.helpScrollOffset++
+		case "pgup":
+			m.helpScrollOffset = max(0, m.helpScrollOffset-m.height)
+		case "pgdown":
+			m.helpScrollOffset += m.height
+		default:
+			m.showHelp = false
+		}
+		return m, nil
+	}
+
 	if m.prompt.Open {
 		switch msg.String() {
 		case "esc":

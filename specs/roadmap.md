@@ -608,7 +608,7 @@ clear error message.
 
 ---
 
-## Milestone 18 — Config File
+## Milestone 18 — Config File ✓
 
 **Delivers:** `~/.config/workout-timer/config.toml` is read on startup and
 applied to defaults.

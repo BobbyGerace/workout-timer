@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -36,7 +37,13 @@ var completionStyle = lipgloss.NewStyle().
 	Foreground(lipgloss.Color("10")).
 	Bold(true)
 
+var helpHeadingStyle = lipgloss.NewStyle().Bold(true)
+
 func (m Model) View() string {
+	if m.showHelp {
+		return m.renderHelp()
+	}
+
 	promptLines := m.renderPrompt()
 	promptHeight := len(promptLines)
 
@@ -181,6 +188,13 @@ func (m Model) renderTier2(mainHeight int) string {
 // Includes: time, interval progress (if > 1 interval), round progress
 // (if > 1 round), lap count (stopwatch), and state indicator (PAUSED/READY).
 func (m Model) renderTier3(mainHeight int) string {
+	content := m.tier3Content()
+	return lipgloss.Place(m.width, mainHeight, lipgloss.Left, lipgloss.Top, content)
+}
+
+// tier3Content builds the single-line status string used by both Tier 3
+// display and the help overlay status line. Requires m.prog != nil.
+func (m Model) tier3Content() string {
 	elements := []string{m.styledTime()}
 
 	intervalCur, intervalTotal := m.prog.IntervalProgress()
@@ -202,8 +216,97 @@ func (m Model) renderTier3(mainHeight int) string {
 		elements = append(elements, label)
 	}
 
-	content := strings.Join(elements, "  ")
-	return lipgloss.Place(m.width, mainHeight, lipgloss.Left, lipgloss.Top, content)
+	return strings.Join(elements, "  ")
+}
+
+// renderHelp renders the full-screen help overlay.
+func (m Model) renderHelp() string {
+	var lines []string
+
+	// Status line
+	if m.prog == nil {
+		lines = append(lines, hintStyle.Render("Unconfigured"))
+	} else {
+		lines = append(lines, m.tier3Content())
+	}
+	lines = append(lines, "")
+
+	// Header + blurb
+	lines = append(lines, helpHeadingStyle.Render("WORKOUT TIMER"))
+	lines = append(lines,
+		"Configure the timer with : or pass arguments on the command line.",
+		"Space starts. Enter advances to the next interval or records a lap.",
+		"",
+	)
+
+	// Modes
+	lines = append(lines, helpHeadingStyle.Render("MODES"))
+	lines = append(lines,
+		"  auto    Timer advances automatically when an interval reaches zero.",
+		"  manual  Timer beeps at zero and counts up in cyan; Enter to advance.",
+		"",
+	)
+
+	// Commands
+	lines = append(lines, helpHeadingStyle.Render("COMMANDS"))
+	cmds := [][2]string{
+		{"set <time>", "loop a single interval (e.g. set 90  or  set 1:30)"},
+		{"set auto|manual <time>", "explicit mode"},
+		{"set <time> xN", "N rounds of a single interval"},
+		{"set <t1>,<t2>,... xN", "multiple intervals per round"},
+		{"stopwatch", "count up from zero; Enter records a lap"},
+		{"pause", "toggle pause"},
+		{"next", "advance to next interval / record a lap"},
+		{"back", "return to previous interval"},
+		{"add <N>", "add N seconds to current timer"},
+		{"subtract <N>", "subtract N seconds (floors at 0:00)"},
+		{"reset", "restart current program from beginning"},
+		{"clear", "return to idle state"},
+		{"status", "show current config and progress"},
+		{"quit / q", "exit"},
+	}
+	maxCmd := 0
+	for _, c := range cmds {
+		if len(c[0]) > maxCmd {
+			maxCmd = len(c[0])
+		}
+	}
+	for _, c := range cmds {
+		lines = append(lines, fmt.Sprintf("  %-*s  %s", maxCmd, c[0], c[1]))
+	}
+	lines = append(lines, "")
+
+	// Keybindings (from live config — reflects any user overrides)
+	lines = append(lines, helpHeadingStyle.Render("KEYBINDINGS"))
+	keys := make([]string, 0, len(m.config.Keybindings))
+	for k := range m.config.Keybindings {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	maxKey := 0
+	for _, k := range keys {
+		if len(k) > maxKey {
+			maxKey = len(k)
+		}
+	}
+	for _, k := range keys {
+		lines = append(lines, fmt.Sprintf("  %-*s  →  %s", maxKey, k, m.config.Keybindings[k]))
+	}
+	lines = append(lines, "")
+	lines = append(lines, hintStyle.Render("Press any key to dismiss"))
+
+	// Apply scroll offset and clamp to available content
+	offset := m.helpScrollOffset
+	maxOffset := max(0, len(lines)-m.height)
+	if offset > maxOffset {
+		offset = maxOffset
+	}
+	visible := lines[offset:]
+	if m.height > 0 && len(visible) > m.height {
+		visible = visible[:m.height]
+	}
+
+	return lipgloss.Place(m.width, m.height, lipgloss.Left, lipgloss.Top, strings.Join(visible, "\n"))
 }
 
 // renderLapList formats completed lap splits for display.
