@@ -1,0 +1,46 @@
+# Workout Timer — Sample Config
+# Location: ~/.config/workout-timer/config.toml
+
+# Default mode for bare `set <time>` commands: "auto" or "manual"
+default_mode = "auto"
+
+# Seconds remaining at which the timer turns yellow
+low_time_warning = 30
+
+# Play a beep sound when an interval reaches zero
+beep = true
+
+# Path to the FIFO pipe for external control (e.g. from neovim)
+# fifo_path = "/tmp/workout-timer.fifo"
+
+# Path to the process lock file (prevents multiple instances)
+# lock_path = "/tmp/workout-timer.lock"
+
+[keybindings]
+# Format: "key" = "command"
+# Set "key" = "" to remove a default binding.
+# Any valid prompt command can be used as a value.
+
+"space" = "pause"
+"p"     = "pause"
+"+"     = "add 30"
+"-"     = "subtract 30"
+"enter" = "next"
+"n"     = "next"
+"b"     = "back"
+"l"     = "next"
+"?"     = "help"
+":"     = "prompt"
+"q"     = "quit"
+
+# Number shortcuts: press a digit to immediately load that many minutes
+"1" = "set 1:00"
+"2" = "set 2:00"
+"3" = "set 3:00"
+"4" = "set 4:00"
+"5" = "set 5:00"
+"6" = "set 6:00"
+"7" = "set 7:00"
+"8" = "set 8:00"
+"9" = "set 9:00"
+"0" = "set 10:00"

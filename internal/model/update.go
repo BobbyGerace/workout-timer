@@ -88,7 +88,7 @@ func (m Model) handleTick(msg tickMsg) (tea.Model, tea.Cmd) {
 	now := time.Time(msg)
 	if !m.lastTick.IsZero() && m.prog != nil && m.prog.State() == prog.ProgramRunning {
 		elapsed := now.Sub(m.lastTick)
-		if m.prog.Tick(elapsed) {
+		if m.prog.Tick(elapsed) && m.config.Beep {
 			audio.Beep()
 		}
 		if m.prog.State() == prog.ProgramDone && m.completionMsg == "" {

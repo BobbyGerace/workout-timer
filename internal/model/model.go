@@ -58,17 +58,17 @@ func (m Model) AppState() AppState {
 	return Unconfigured
 }
 
-func New() Model {
-	return NewWithProgram(nil)
+func New(cfg config.Config) Model {
+	return NewWithProgram(nil, cfg)
 }
 
-func NewWithProgram(p prog.Program) Model {
+func NewWithProgram(p prog.Program, cfg config.Config) Model {
 	input := textinput.New()
 	input.Placeholder = "set 1:30"
 	input.CharLimit = 100
 
 	return Model{
-		config:  config.Default(),
+		config:  cfg,
 		prompt:  Prompt{Input: input},
 		prog:    p,
 	}

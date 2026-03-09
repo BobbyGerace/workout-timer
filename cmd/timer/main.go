@@ -17,7 +17,11 @@ import (
 )
 
 func main() {
-	cfg := config.Default()
+	cfg, err := config.Load(config.ConfigPath())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not load config: %v\n", err)
+		cfg = config.Default()
+	}
 
 	lock, err := acquireLock(cfg.LockPath)
 	if err != nil {
@@ -74,16 +78,16 @@ func acquireLock(path string) (*os.File, error) {
 func buildInitialModel(cfg config.Config) (model.Model, error) {
 	args := os.Args[1:]
 	if len(args) == 0 {
-		return model.New(), nil
+		return model.New(cfg), nil
 	}
 
 	if args[0] == "stopwatch" {
-		return model.NewWithProgram(stopwatch.New()), nil
+		return model.NewWithProgram(stopwatch.New(), cfg), nil
 	}
 
 	prog, err := parser.ParseSet("set "+strings.Join(args, " "), cfg.DefaultMode)
 	if err != nil {
 		return model.Model{}, fmt.Errorf("invalid arguments: %w", err)
 	}
-	return model.NewWithProgram(prog), nil
+	return model.NewWithProgram(prog, cfg), nil
 }

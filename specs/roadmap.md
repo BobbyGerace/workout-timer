@@ -271,7 +271,6 @@ type Model struct {
 type Config struct {
     DefaultMode    types.Mode
     LowTimeWarning int               // seconds, default 30
-    TimeIncrement  int               // seconds, default 30
     Beep           bool              // default true
     Keybindings    map[string]string // key → command string
     FIFOPath       string            // default /tmp/workout-timer.fifo
@@ -507,7 +506,7 @@ same grammar as the `set` command.
 
 ---
 
-## Milestone 15 — Display Priority + Resize
+## Milestone 15 — Display Priority + Resize ✓
 
 **Delivers:** The display degrades across three tiers as terminal height
 decreases. All transitions happen live on resize.
@@ -569,7 +568,7 @@ No lap durations — no room.
 
 ---
 
-## Milestone 16 — FIFO Pipe
+## Milestone 16 — FIFO Pipe ✓
 
 **Delivers:** The timer listens on `/tmp/workout-timer.fifo` for commands. Any
 command valid in the prompt is valid over the pipe.
@@ -589,7 +588,7 @@ command valid in the prompt is valid over the pipe.
 
 ---
 
-## Milestone 17 — Process Management
+## Milestone 17 — Process Management ✓
 
 **Delivers:** Only one instance can run at a time. A second launch exits with a
 clear error message.
@@ -617,10 +616,10 @@ applied to defaults.
 **Verify:**
 
 - Set `low_time_warning = 10` in config — yellow triggers at 10s
-- Set `time_increment = 60` — `+` key adds 60s
 - Set `default_mode = "manual"` — bare `set <time>` uses manual mode
 - Add a `[keybindings]` entry — custom key works, and setting a key to `""`
   unsets it
+- To change the time increment, set `"+" = "add 60"` directly in `[keybindings]`
 
 **Notes:**
 
@@ -628,6 +627,9 @@ applied to defaults.
 - `internal/config` defines a `Config` struct with all fields and their defaults
 - Keybindings are a `[keybindings]` TOML table: e.g. `"b" = "back"`,
   `"space" = "pause"`. Set `"<key>" = ""` to unset a binding entirely.
+- Time increment is not a separate config field — it is encoded directly in the
+  keybinding command (e.g. `"+" = "add 60"`). The default `+`/`-` bindings
+  already use this pattern.
 - The config loader populates the same `map[string]string` that `Update` uses
   for command dispatch — no separate action enum needed
 - Config is loaded once at startup and passed into the initial model
