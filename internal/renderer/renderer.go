@@ -17,13 +17,18 @@ func gapBefore(prev, cur rune) int {
 
 // BigDigits renders a string of digits and colons into a slice of 5 strings,
 // one per row. Characters not present in the font are skipped.
-func BigDigits(s string) []string {
+func BigDigits(s string, font string) []string {
+	glyphSet := pixel
+	if font == "powerline" {
+		glyphSet = powerline
+	}
+
 	var rows [glyphHeight]strings.Builder
 
 	prev := rune(0)
 	for _, ch := range s {
 		// TODO: make font type a config setting
-		glyph, ok := pixel[ch]
+		glyph, ok := glyphSet[ch]
 		if !ok {
 			continue
 		}

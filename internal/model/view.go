@@ -111,7 +111,7 @@ const bigDigitHeight = 5
 
 func (m Model) renderTier1(mainHeight int) string {
 	timeStr := formatTime(m.prog.TimeDisplay())
-	rows := renderer.BigDigits(timeStr)
+	rows := renderer.BigDigits(timeStr, m.config.Font)
 	content := m.timeStyle().Render(strings.Join(rows, "\n")) + "\n"
 
 	// Budget remaining lines for labels (each costs 1 row + 1 blank separator).

@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	DefaultMode    types.Mode
+	Font           string
 	LowTimeWarning int               // seconds, default 30
 	Beep           bool              // default true
 	Keybindings    map[string]string // key → command string
@@ -21,7 +22,8 @@ type Config struct {
 // tomlFile mirrors the TOML file structure. Pointer fields let us detect
 // which keys were explicitly set versus absent.
 type tomlFile struct {
-	DefaultMode    *string           `toml:"default_mode"`
+	DefaultMode    *string `toml:"default_mode"`
+	Font           *string
 	LowTimeWarning *int              `toml:"low_time_warning"`
 	Beep           *bool             `toml:"beep"`
 	FIFOPath       *string           `toml:"fifo_path"`
@@ -72,6 +74,9 @@ func Load(path string) (Config, error) {
 	if f.Beep != nil {
 		cfg.Beep = *f.Beep
 	}
+	if f.Font != nil {
+		cfg.Font = *f.Font
+	}
 	if f.FIFOPath != nil {
 		cfg.FIFOPath = *f.FIFOPath
 	}
@@ -94,6 +99,7 @@ func Default() Config {
 		DefaultMode:    types.ModeAuto,
 		LowTimeWarning: 30,
 		Beep:           true,
+		Font:           "pixel",
 		Keybindings: map[string]string{
 			"space": "pause",
 			"p":     "pause",

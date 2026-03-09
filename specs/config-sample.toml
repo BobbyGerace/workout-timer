@@ -4,6 +4,10 @@
 # Default mode for bare `set <time>` commands: "auto" or "manual"
 default_mode = "auto"
 
+# Clock display font. Options are "pixel" (default) and "powerline"
+# (requires powerline patched font or nerdfont)
+font = "pixel"
+
 # Seconds remaining at which the timer turns yellow
 low_time_warning = 30
 
